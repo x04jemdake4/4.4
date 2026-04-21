@@ -1,0 +1,455 @@
+---
+title: "HW #4.3"
+author: "Ryan Broadhurst"
+date: "April 14, 2026"
+format: 
+  pdf: 
+    toc: false
+    number-sections: true
+    number-depth: 5
+    fig-align: center
+    cap-location: top
+    geometry: 
+      - top=1in
+      - left=1in
+      - right=1in
+      - bottom=1in
+    colorlinks: true
+execute: 
+  echo: false
+  warning: false
+references:
+  - id: hatfieldQuartoCrashCourse
+    type: webpage
+    author:
+      - family: Hatfield
+        given: Neil J.
+    title: "Quarto Crash Course"
+    issued: 2024
+    URL: "https://neilhatfield.github.io/STAT184/quarto_crash_course"
+  - id: kaplanDataComputing
+    type: book
+    author:
+      - family: Kaplan
+        given: Daniel T.
+      - family: Beckman
+        given: Matthew D.
+    title: "Data Computing: An Introduction to Wrangling and Visualization with R"
+    edition: 2nd
+    issued: 2020
+    URL: "https://dtkaplan.github.io/DataComputingEbook/"
+  - id: wickhamDiamonds2015
+    type: article
+    author:
+      - family: Wickham
+        given: Hadley
+    title: "The Diamonds Data Set"
+    issued: 2015
+    DOI: "10.5281/zenodo.3522105"
+nocite: |
+  @wickhamDiamonds2015
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+# Load Required Libraries ----
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+```
+
+# Busiest Airports Analysis
+
+This section examines the six busiest passenger airports in the world across the years 2020 through 2025. The data was manually compiled from publicly available annual airport traffic rankings, covering total passenger counts for each year's top six airports. The data wrangling and visualization approaches used in this section draw on techniques from @kaplanDataComputing.
+
+## Data
+
+```{r}
+#| label: airport-data
+
+# Busiest Airports Data ----
+busiestAirports <- data.frame(
+  year = c(2025, 2025, 2025, 2025, 2025, 2025,
+           2024, 2024, 2024, 2024, 2024, 2024,
+           2023, 2023, 2023, 2023, 2023, 2023,
+           2022, 2022, 2022, 2022, 2022, 2022,
+           2021, 2021, 2021, 2021, 2021, 2021,
+           2020, 2020, 2020, 2020, 2020, 2020),
+  rank = c(1, 2, 3, 4, 5, 6,
+           1, 2, 3, 4, 5, 6,
+           1, 2, 3, 4, 5, 6,
+           1, 2, 3, 4, 5, 6,
+           1, 2, 3, 4, 5, 6,
+           1, 2, 3, 4, 5, 6),
+  airport = c("Hartsfield-Jackson Atlanta International Airport",
+              "Dubai International Airport",
+              "Tokyo Haneda Airport",
+              "Dallas Fort Worth International Airport",
+              "Shanghai Pudong International Airport",
+              "O'Hare International Airport",
+              "Hartsfield-Jackson Atlanta International Airport",
+              "Dubai International Airport",
+              "Dallas Fort Worth International Airport",
+              "Tokyo Haneda Airport",
+              "Heathrow Airport",
+              "Denver International Airport",
+              "Hartsfield-Jackson Atlanta International Airport",
+              "Dubai International Airport",
+              "Dallas Fort Worth International Airport",
+              "Heathrow Airport",
+              "Tokyo Haneda Airport",
+              "Denver International Airport",
+              "Hartsfield-Jackson Atlanta International Airport",
+              "Dallas Fort Worth International Airport",
+              "Denver International Airport",
+              "O'Hare International Airport",
+              "Dubai International Airport",
+              "Los Angeles International Airport",
+              "Hartsfield-Jackson Atlanta International Airport",
+              "Dallas Fort Worth International Airport",
+              "Denver International Airport",
+              "O'Hare International Airport",
+              "Los Angeles International Airport",
+              "Charlotte Douglas International Airport",
+              "Guangzhou Baiyun International Airport",
+              "Hartsfield-Jackson Atlanta International Airport",
+              "Chengdu Shuangliu International Airport",
+              "Dallas Fort Worth International Airport",
+              "Shenzhen Bao'an International Airport",
+              "Chongqing Jiangbei International Airport"),
+  code = c("ATL", "DXB", "HND", "DFW", "PVG", "ORD",
+           "ATL", "DXB", "DFW", "HND", "LHR", "DEN",
+           "ATL", "DXB", "DFW", "LHR", "HND", "DEN",
+           "ATL", "DFW", "DEN", "ORD", "DXB", "LAX",
+           "ATL", "DFW", "DEN", "ORD", "LAX", "CLT",
+           "CAN", "ATL", "CTU", "DFW", "SZX", "CKG"),
+  passengers = c(106302208, 95200000, 91430000, 85660127, 84994548, 84851825,
+                 108067766, 92331506, 87817864, 85900167, 83884572, 82358744,
+                 104653451, 86994365, 81755538, 79183364, 78719302, 77837917,
+                 93699630, 73362946, 69286461, 68340619, 66069981, 65924298,
+                 75704760, 62465756, 58828552, 54020399, 48007284, 43302230,
+                 43767558, 42918685, 40741509, 39364990, 37916054, 34937789)
+)
+
+# Sort data by year and rank ----
+busiestAirports <- busiestAirports |>
+  arrange(year, rank)
+```
+
+## Table of Busiest Airports
+
+@tbl-airports presents the complete dataset of the top six busiest airports by passenger count for each year from 2020 to 2025.
+
+```{r}
+#| label: tbl-airports
+#| tbl-cap: "Top 6 Busiest Passenger Airports by Year (2020--2025)"
+#| tbl-pos: H
+#| html-table-processing: none
+
+# Create Formatted Table ----
+busiestAirports |>
+  mutate(
+    passengers = format(passengers, big.mark = ",", scientific = FALSE)
+  ) |>
+  arrange(desc(year), rank) |>
+  kable(
+    col.names = c("Year", "Rank", "Airport", "Code", "Passengers"),
+    align = "ccllr"
+  ) |>
+  kable_classic(
+    lightable_options = "striped"
+  )
+```
+
+Several patterns are visible in this table. Hartsfield-Jackson Atlanta International Airport (ATL) has consistently held the number one position throughout most of the time period, with the notable exception of 2020 when Chinese airports dominated the rankings due to differing pandemic recovery timelines. Dallas Fort Worth International Airport (DFW) is the only other airport to appear in every single year. The dramatic drop in passenger numbers from pre-pandemic levels (2020--2021) and the subsequent recovery (2022--2025) is also clearly evident.
+
+## Visualization of Airport Traffic
+
+@fig-airports visualizes the passenger trends for all airports that appeared in the top six during this period. The line chart makes it easy to see the sharp decline in 2020, the recovery trajectory, and which airports have been the most consistent performers over time.
+
+```{r}
+#| label: fig-airports
+#| fig-cap: "Passenger Traffic Trends for Airports Appearing in the Yearly Top 6 (2020--2025)"
+#| fig-pos: H
+#| fig-height: 6
+#| fig-width: 8
+
+# Create Airport Trend Visualization ----
+busiestAirports |>
+  mutate(
+    airport = factor(
+      airport,
+      levels = c(
+        "Hartsfield-Jackson Atlanta International Airport",
+        "Dubai International Airport",
+        "Tokyo Haneda Airport",
+        "Dallas Fort Worth International Airport",
+        "Shanghai Pudong International Airport",
+        "O'Hare International Airport",
+        "Heathrow Airport",
+        "Denver International Airport",
+        "Los Angeles International Airport",
+        "Charlotte Douglas International Airport",
+        "Guangzhou Baiyun International Airport",
+        "Chengdu Shuangliu International Airport",
+        "Shenzhen Bao'an International Airport",
+        "Chongqing Jiangbei International Airport"
+      )
+    )
+  ) |>
+  ggplot(aes(x = year, y = passengers, color = airport, group = airport)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Top 6 Busiest Airports by Year",
+    subtitle = "Total passengers for airports appearing in the yearly top 6, 2020-2025",
+    x = "Year",
+    y = "Passengers",
+    color = "Airport"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8)
+  ) +
+  guides(color = guide_legend(ncol = 2))
+```
+
+The visualization reveals a strong post-pandemic recovery in air travel. ATL rebounded quickly and surpassed 100 million passengers by 2023, maintaining that level through 2025. DXB has shown steady growth, climbing from around 66 million in 2022 to over 95 million by 2025. The Chinese airports (CAN, CTU, SZX, CKG) that dominated the 2020 rankings have largely disappeared from the top six in subsequent years as international travel restrictions shifted the landscape. Tokyo Haneda (HND) has also emerged as a strong contender, reaching over 91 million passengers in 2025.
+
+{{< pagebreak >}}
+
+# Monte Carlo Numerical Integration
+
+## Background
+
+Monte Carlo integration is a probabilistic method for estimating the value of a definite integral. The core idea is to enclose the function of interest inside a known rectangle, then randomly sample points within that rectangle. The proportion of points that fall on or below the curve, multiplied by the area of the rectangle, provides an estimate of the integral.
+
+For this analysis, I was assigned the standard normal probability density function (PDF):
+
+$$f(x) = \frac{1}{\sqrt{2\pi}} e^{-x^2/2}$$
+
+evaluated over the interval $[-4, 4]$ with $y$ values bounded by $[0, 0.4]$. The theoretical value of $\int_{-4}^{4} f(x) \, dx$ is extremely close to 1 (approximately 0.99994).
+
+## Monte Carlo Simulation Function
+
+```{r}
+#| label: mc-function
+
+# Monte Carlo Simulation Function ----
+# Generates n random (x, y) points within a specified rectangle
+mcSimulation <- function(n, xMin, xMax, yMin, yMax) {
+  data.frame(
+    x = runif(n, min = xMin, max = xMax),
+    y = runif(n, min = yMin, max = yMax)
+  )
+}
+```
+
+## Small Multiple Visualization
+
+The following visualization (@fig-mc-small-multiples) displays the Monte Carlo simulation at four different sample sizes: $n = 100$, $n = 500$, $n = 1{,}000$, and $n = 10{,}000$. Each panel shows the random points colored by whether they fall on/below the normal density curve (indicating they contribute to the integral estimate) or above it. As $n$ increases, the estimated integral converges toward the true value. The multi-pane layout follows the approach described in @hatfieldQuartoCrashCourse.
+
+```{r}
+#| label: fig-mc-small-multiples
+#| fig-cap: "Monte Carlo Integration of the Standard Normal PDF at Varying Sample Sizes"
+#| fig-pos: H
+#| fig-height: 7
+#| fig-width: 8
+
+# Set seed for reproducibility ----
+set.seed(184)
+
+# Define sample sizes for small multiples ----
+sampleSizes <- c(100, 500, 1000, 10000)
+
+# Rectangle bounds ----
+xMin <- -4
+xMax <- 4
+yMin <- 0
+yMax <- 0.4
+rectArea <- (xMax - xMin) * (yMax - yMin)
+
+# Run simulations and combine results ----
+allResults <- bind_rows(
+  lapply(sampleSizes, function(n) {
+    simData <- mcSimulation(n, xMin, xMax, yMin, yMax)
+    simData |>
+      mutate(
+        curveY = dnorm(x),
+        flag = if_else(y <= curveY, "On/Below Curve", "Above Curve"),
+        sampleSize = paste0("n = ", format(n, big.mark = ",")),
+        estIntegral = rectArea * mean(y <= curveY)
+      )
+  })
+)
+
+# Ensure panel ordering by sample size ----
+allResults <- allResults |>
+  mutate(
+    sampleSize = factor(
+      sampleSize,
+      levels = paste0("n = ", format(sampleSizes, big.mark = ","))
+    )
+  )
+
+# Compute summary label for each panel ----
+panelLabels <- allResults |>
+  group_by(sampleSize) |>
+  summarize(
+    estIntegral = first(estIntegral),
+    .groups = "drop"
+  ) |>
+  mutate(label = paste0("Est. = ", round(estIntegral, 4)))
+
+# Create small multiples plot using facet_wrap ----
+ggplot(allResults, aes(x = x, y = y, color = flag)) +
+  geom_point(alpha = 0.5, size = 0.8) +
+  stat_function(fun = dnorm, linewidth = 1, color = "navy") +
+  facet_wrap(~ sampleSize, ncol = 2) +
+  geom_text(
+    data = panelLabels,
+    aes(x = -3.5, y = 0.38, label = label),
+    inherit.aes = FALSE,
+    hjust = 0,
+    size = 3,
+    color = "black"
+  ) +
+  scale_color_manual(values = c("On/Below Curve" = "steelblue", "Above Curve" = "coral")) +
+  coord_cartesian(xlim = c(-4, 4), ylim = c(0, 0.4)) +
+  labs(
+    title = "Monte Carlo Numerical Integration of the Standard Normal PDF",
+    subtitle = "Comparing estimates across different sample sizes",
+    x = "x",
+    y = "y",
+    color = "Point Position"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    strip.text = element_text(face = "bold")
+  )
+```
+
+As seen in @fig-mc-small-multiples, the Monte Carlo estimate becomes more accurate as the sample size increases. With only $n = 100$ points, the estimate is relatively rough and may vary considerably from the true value. By $n = 10{,}000$, the estimate consistently approaches the theoretical value of approximately 1.0. This demonstrates the law of large numbers at work: as we increase our sample size, our estimate converges to the true value of the integral. The visualization also clearly shows the characteristic bell shape of the standard normal distribution emerging as more points are plotted.
+
+{{< pagebreak >}}
+
+# Planning and Prompting GenAI Tools
+
+## Data Context and Plan
+
+<!-- 
+  TODO: Replace the content below with the actual data context from your 
+  HW 4.3 MOM assignment. Describe the dataset and what needs to be done.
+-->
+
+[INSERT: Description of the new data context provided in the MOM assignment.]
+
+**My plan for tidying, wrangling, and visualizing this data:**
+
+1. [INSERT: Step 1 of your plan — e.g., read in the data file]
+2. [INSERT: Step 2 — e.g., identify and fix any tidy data violations]
+3. [INSERT: Step 3 — e.g., filter, mutate, or summarize as needed]
+4. [INSERT: Step 4 — e.g., create the specified visualization using ggplot2]
+
+## Results from Plan-Based Prompt
+
+I used my plan above along with the original data file as a prompt to [INSERT: Claude / ChatGPT / Microsoft Copilot]. Below are the results generated by the tool.
+
+<!-- 
+  TODO: Insert a screenshot or the code output from your plan-based prompt.
+  You can include an image like this:
+  ![Plan-based prompt result](plan_prompt_result.png){fig-pos="H"}
+  
+  Or, if you're including code that was generated, place it in a code block
+  that does NOT execute:
+-->
+
+```
+[INSERT: The code or output generated by your GenAI tool from the plan-based prompt]
+```
+
+## Results from Generic Prompt
+
+For comparison, below are the results from a generic prompt (provided in the assignment materials) submitted to the same GenAI tool.
+
+<!-- 
+  TODO: Pick the generic prompt result that matches your chosen GenAI tool.
+  Insert a screenshot or the code here.
+-->
+
+```
+[INSERT: The code or output generated by the generic prompt]
+```
+
+## Comparison of Plan-Based vs. Generic Prompts
+
+<!-- 
+  TODO: Write 2-3 paragraphs comparing and contrasting the two sets of results.
+  Consider: code quality, correctness, readability, whether the output matched 
+  the data context, how well each addressed the tidying/wrangling needs, and 
+  the quality of the resulting visualization.
+-->
+
+[INSERT: Your narrative comparing and contrasting the plan-based and generic prompt results.]
+
+{{< pagebreak >}}
+
+# Reflection
+
+<!-- 
+  TODO: Write a thoughtful reflection on what you've learned in the course so far.
+  Be specific — mention particular concepts, tools, assignments, or skills.
+  Aim for at least 2-3 well-developed paragraphs.
+-->
+
+[INSERT: Your reflection on what you have learned so far in this course, with specific examples.]
+
+{{< pagebreak >}}
+
+# References {.unnumbered}
+::: {#refs}
+:::
+
+{{< pagebreak >}}
+
+# Appendix A: GenAI Usage {.unnumbered}
+
+<!-- 
+  TODO: Document ALL usage of GenAI tools in this assignment.
+  For each usage, include the items listed below.
+  Copy this block for each separate interaction.
+-->
+
+**GenAI Tool:** [e.g., Anthropic Claude, Claude Opus 4.6]
+**Date of Usage:** [e.g., April 15, 2026]
+
+**Prompt Used:**
+
+> [INSERT: The exact prompt you submitted to the tool.]
+
+**Follow-Up Prompts (if any):**
+
+> [INSERT: Any follow-up prompts.]
+
+**Response Generated:**
+
+> [INSERT: The exact response text from the tool.]
+
+---
+
+<!-- Repeat the block above for each GenAI interaction. -->
+
+{{< pagebreak >}}
+
+# Appendix B: Code Appendix {.unnumbered}
+
+```{r ref.label=knitr::all_labels()}
+#| echo: true
+#| eval: false
+```
